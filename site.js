@@ -26,44 +26,19 @@
     }
 
     if (!Array.isArray(gallery.photos) || gallery.photos.length === 0) {
-      const title = document.createElement("dt");
-      title.id = "first-photographs";
-      title.textContent = gallery.emptyTitle;
-
-      const description = document.createElement("dd");
-      description.textContent = gallery.emptyText;
-
-      list.appendChild(title);
-      list.appendChild(description);
+      const empty = document.createElement("p");
+      empty.id = "first-photographs";
+      empty.textContent = gallery.emptyText;
+      list.appendChild(empty);
       return;
     }
 
     gallery.photos.forEach((photo) => {
-      const title = document.createElement("dt");
-      const link = document.createElement("a");
-      link.href = photo.src;
-      link.textContent = photo.title || "Untitled photograph";
-      title.appendChild(link);
-
-      const description = document.createElement("dd");
-      const parts = [photo.place, photo.date, photo.caption].filter(Boolean);
-      description.textContent = parts.join(". ");
-
-      if (photo.thumb || photo.src) {
-        const imageLink = document.createElement("a");
-        imageLink.href = photo.src;
-
-        const image = document.createElement("img");
-        image.src = photo.thumb || photo.src;
-        image.alt = photo.title || "Japan photograph";
-        image.loading = "lazy";
-
-        imageLink.appendChild(image);
-        description.appendChild(imageLink);
-      }
-
-      list.appendChild(title);
-      list.appendChild(description);
+      const image = document.createElement("img");
+      image.src = photo.src;
+      image.alt = photo.title || "Japan photograph";
+      image.loading = "lazy";
+      list.appendChild(image);
     });
   }
 })();
