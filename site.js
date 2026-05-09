@@ -16,6 +16,8 @@
     }
   ];
 
+  const viewer = createViewer();
+
   galleries.forEach((gallery) => renderGallery(gallery));
 
   function renderGallery(gallery) {
@@ -33,12 +35,107 @@
       return;
     }
 
-    gallery.photos.forEach((photo) => {
+    gallery.photos.forEach((photo, index) => {
       const image = document.createElement("img");
       image.src = photo.src;
       image.alt = photo.title || "Japan photograph";
       image.loading = "lazy";
+      image.tabIndex = 0;
+      image.addEventListener("click", () => viewer.open(gallery.photos, index));
+      image.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          viewer.open(gallery.photos, index);
+        }
+      });
       list.appendChild(image);
     });
+  }
+
+  function createViewer() {
+    let photos = [];
+    let currentIndex = 0;
+
+    const viewerElement = document.createElement("div");
+    viewerElement.className = "photo-viewer";
+    viewerElement.hidden = true;
+
+    const controls = document.createElement("p");
+    controls.className = "photo-viewer-controls";
+
+    const previous = document.createElement("button");
+    previous.type = "button";
+    previous.textContent = "previous";
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "close";
+
+    const next = document.createElement("button");
+    next.type = "button";
+    next.textContent = "next";
+
+    controls.appendChild(previous);
+    controls.append(" ");
+    controls.appendChild(close);
+    controls.append(" ");
+    controls.appendChild(next);
+
+    const image = document.createElement("img");
+    image.className = "photo-viewer-image";
+    image.alt = "";
+
+    viewerElement.appendChild(controls);
+    viewerElement.appendChild(image);
+    document.body.appendChild(viewerElement);
+
+    previous.addEventListener("click", () => show(currentIndex - 1));
+    next.addEventListener("click", () => show(currentIndex + 1));
+    close.addEventListener("click", closeViewer);
+
+    document.addEventListener("keydown", (event) => {
+      if (viewerElement.hidden) {
+        return;
+      }
+
+      if (event.key === "Escape") {
+        closeViewer();
+      }
+
+      if (event.key === "ArrowLeft") {
+        show(currentIndex - 1);
+      }
+
+      if (event.key === "ArrowRight") {
+        show(currentIndex + 1);
+      }
+    });
+
+    function open(nextPhotos, index) {
+      photos = nextPhotos;
+      currentIndex = index;
+      viewerElement.hidden = false;
+      document.body.classList.add("is-viewing-photo");
+      show(index);
+      close.focus();
+    }
+
+    function show(index) {
+      if (photos.length === 0) {
+        return;
+      }
+
+      currentIndex = (index + photos.length) % photos.length;
+      image.src = photos[currentIndex].src;
+      image.alt = photos[currentIndex].title || "Japan photograph";
+      viewerElement.scrollTop = 0;
+    }
+
+    function closeViewer() {
+      viewerElement.hidden = true;
+      document.body.classList.remove("is-viewing-photo");
+    }
+
+    return { open };
   }
 })();

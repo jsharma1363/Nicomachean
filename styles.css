@@ -54,6 +54,52 @@ img {
   margin: 0 0 30px;
 }
 
+button {
+  padding: 0;
+  border: 0;
+  color: #0000ee;
+  background: transparent;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+body.is-viewing-photo {
+  overflow: hidden;
+}
+
+.photo-roll img {
+  cursor: pointer;
+}
+
+.photo-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  overflow: auto;
+  padding: 32px 8%;
+  background: white;
+}
+
+.photo-viewer[hidden] {
+  display: none;
+}
+
+.photo-viewer-controls {
+  position: sticky;
+  top: 0;
+  margin-bottom: 24px;
+  background: white;
+}
+
+.photo-viewer-image {
+  max-width: none;
+  width: auto;
+  max-height: calc(100vh - 130px);
+  margin: 0 auto 30px 0;
+}
+
 small {
   font-size: 70%;
 }
@@ -75,5 +121,14 @@ small {
 
   dd {
     margin-left: 34px;
+  }
+
+  .photo-viewer {
+    padding: 18px 14px;
+  }
+
+  .photo-viewer-image {
+    max-width: 100%;
+    max-height: none;
   }
 }
