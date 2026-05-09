@@ -58,6 +58,9 @@
     let touchStartX = 0;
     let touchStartY = 0;
     let isPinching = false;
+    let pinchStartDistance = 0;
+    let pinchStartScale = 1;
+    let scale = 1;
 
     const viewerElement = document.createElement("div");
     viewerElement.className = "photo-viewer";
@@ -96,7 +99,7 @@
     next.addEventListener("click", () => show(currentIndex + 1));
     close.addEventListener("click", closeViewer);
     viewerElement.addEventListener("touchstart", handleTouchStart, { passive: true });
-    viewerElement.addEventListener("touchmove", handleTouchMove, { passive: true });
+    viewerElement.addEventListener("touchmove", handleTouchMove, { passive: false });
     viewerElement.addEventListener("touchend", handleTouchEnd);
     viewerElement.addEventListener("touchcancel", resetTouch);
 
@@ -124,9 +127,6 @@
       viewerElement.hidden = false;
       document.body.classList.add("is-viewing-photo");
       show(index);
-      if (viewerElement.requestFullscreen) {
-        viewerElement.requestFullscreen().catch(() => {});
-      }
       close.focus();
     }
 
@@ -138,10 +138,19 @@
       currentIndex = (index + photos.length) % photos.length;
       image.src = photos[currentIndex].src;
       image.alt = photos[currentIndex].title || "Japan photograph";
+      resetZoom();
       viewerElement.scrollTop = 0;
+      viewerElement.scrollLeft = 0;
     }
 
     function handleTouchStart(event) {
+      if (event.touches.length === 2) {
+        isPinching = true;
+        pinchStartDistance = getTouchDistance(event.touches);
+        pinchStartScale = scale;
+        return;
+      }
+
       if (event.touches.length !== 1) {
         isPinching = event.touches.length > 1;
         return;
@@ -153,7 +162,18 @@
     }
 
     function handleTouchMove(event) {
-      if (event.touches.length > 1) {
+      if (event.touches.length === 2) {
+        event.preventDefault();
+        isPinching = true;
+        const distance = getTouchDistance(event.touches);
+
+        if (pinchStartDistance === 0) {
+          pinchStartDistance = distance;
+          pinchStartScale = scale;
+        }
+
+        setScale(pinchStartScale * (distance / pinchStartDistance));
+      } else if (event.touches.length > 1) {
         isPinching = true;
       }
     }
@@ -167,6 +187,10 @@
       }
 
       if (event.changedTouches.length !== 1) {
+        return;
+      }
+
+      if (scale > 1) {
         return;
       }
 
@@ -186,18 +210,45 @@
       }
     }
 
+    function getTouchDistance(touches) {
+      const deltaX = touches[0].clientX - touches[1].clientX;
+      const deltaY = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(deltaX, deltaY);
+    }
+
+    function setScale(nextScale) {
+      scale = Math.min(Math.max(nextScale, 1), 5);
+
+      if (scale <= 1.02) {
+        resetZoom();
+        return;
+      }
+
+      image.style.width = `${scale * 100}%`;
+      image.style.maxWidth = "none";
+      image.style.maxHeight = "none";
+    }
+
+    function resetZoom() {
+      scale = 1;
+      image.style.width = "";
+      image.style.maxWidth = "";
+      image.style.maxHeight = "";
+    }
+
     function resetTouch() {
       touchStartX = 0;
       touchStartY = 0;
       isPinching = false;
+      pinchStartDistance = 0;
+      pinchStartScale = scale;
     }
 
     function closeViewer() {
       viewerElement.hidden = true;
       document.body.classList.remove("is-viewing-photo");
-      if (document.fullscreenElement === viewerElement) {
-        document.exitFullscreen().catch(() => {});
-      }
+      resetZoom();
+      resetTouch();
     }
 
     return { open };
