@@ -57,6 +57,7 @@
     let currentIndex = 0;
     let touchStartX = 0;
     let touchStartY = 0;
+    let isPinching = false;
 
     const viewerElement = document.createElement("div");
     viewerElement.className = "photo-viewer";
@@ -95,7 +96,9 @@
     next.addEventListener("click", () => show(currentIndex + 1));
     close.addEventListener("click", closeViewer);
     viewerElement.addEventListener("touchstart", handleTouchStart, { passive: true });
+    viewerElement.addEventListener("touchmove", handleTouchMove, { passive: true });
     viewerElement.addEventListener("touchend", handleTouchEnd);
+    viewerElement.addEventListener("touchcancel", resetTouch);
 
     document.addEventListener("keydown", (event) => {
       if (viewerElement.hidden) {
@@ -121,6 +124,9 @@
       viewerElement.hidden = false;
       document.body.classList.add("is-viewing-photo");
       show(index);
+      if (viewerElement.requestFullscreen) {
+        viewerElement.requestFullscreen().catch(() => {});
+      }
       close.focus();
     }
 
@@ -137,14 +143,29 @@
 
     function handleTouchStart(event) {
       if (event.touches.length !== 1) {
+        isPinching = event.touches.length > 1;
         return;
       }
 
+      isPinching = false;
       touchStartX = event.touches[0].clientX;
       touchStartY = event.touches[0].clientY;
     }
 
+    function handleTouchMove(event) {
+      if (event.touches.length > 1) {
+        isPinching = true;
+      }
+    }
+
     function handleTouchEnd(event) {
+      if (isPinching) {
+        if (event.touches.length === 0) {
+          resetTouch();
+        }
+        return;
+      }
+
       if (event.changedTouches.length !== 1) {
         return;
       }
@@ -165,9 +186,18 @@
       }
     }
 
+    function resetTouch() {
+      touchStartX = 0;
+      touchStartY = 0;
+      isPinching = false;
+    }
+
     function closeViewer() {
       viewerElement.hidden = true;
       document.body.classList.remove("is-viewing-photo");
+      if (document.fullscreenElement === viewerElement) {
+        document.exitFullscreen().catch(() => {});
+      }
     }
 
     return { open };
