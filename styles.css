@@ -80,6 +80,7 @@ body.is-viewing-photo {
   overflow: auto;
   padding: 32px 8%;
   background: white;
+  touch-action: pan-y;
 }
 
 .photo-viewer[hidden] {

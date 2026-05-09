@@ -55,6 +55,8 @@
   function createViewer() {
     let photos = [];
     let currentIndex = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
 
     const viewerElement = document.createElement("div");
     viewerElement.className = "photo-viewer";
@@ -92,6 +94,8 @@
     previous.addEventListener("click", () => show(currentIndex - 1));
     next.addEventListener("click", () => show(currentIndex + 1));
     close.addEventListener("click", closeViewer);
+    viewerElement.addEventListener("touchstart", handleTouchStart, { passive: true });
+    viewerElement.addEventListener("touchend", handleTouchEnd);
 
     document.addEventListener("keydown", (event) => {
       if (viewerElement.hidden) {
@@ -129,6 +133,36 @@
       image.src = photos[currentIndex].src;
       image.alt = photos[currentIndex].title || "Japan photograph";
       viewerElement.scrollTop = 0;
+    }
+
+    function handleTouchStart(event) {
+      if (event.touches.length !== 1) {
+        return;
+      }
+
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+    }
+
+    function handleTouchEnd(event) {
+      if (event.changedTouches.length !== 1) {
+        return;
+      }
+
+      const touchEndX = event.changedTouches[0].clientX;
+      const touchEndY = event.changedTouches[0].clientY;
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+
+      if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) {
+        return;
+      }
+
+      if (deltaX < 0) {
+        show(currentIndex + 1);
+      } else {
+        show(currentIndex - 1);
+      }
     }
 
     function closeViewer() {
